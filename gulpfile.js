@@ -7,9 +7,12 @@ const autoprefixer = require('gulp-autoprefixer');
 const browserSync = require('browser-sync');
 const nunjucks = require('gulp-nunjucks-render');
 const imagemin = require('gulp-imagemin');
+const watch = require('gulp-watch');
+const plumber = require('gulp-plumber');
 
 gulp.task('css', function() {
   return gulp.src('src/main.scss')
+    .pipe(plumber())
     .pipe(maps.init())
     .pipe(scss())
     .pipe(autoprefixer({
@@ -20,15 +23,18 @@ gulp.task('css', function() {
       suffix: '.min'
     }))
     .pipe(maps.write())
+    .pipe(plumber.stop())
     .pipe(gulp.dest('dist/css'))
     .pipe(browserSync.stream())
 });
 
 gulp.task('html', function() {
-  return gulp.src('src/views')
+  return gulp.src('src/views/*.html')
+    .pipe(plumber())
     .pipe(nunjucks({
       path: 'src/'
     }))
+    .pipe(plumber.stop())
     .pipe(gulp.dest('dist'))
     .pipe(browserSync.stream())
 });
@@ -64,7 +70,7 @@ gulp.task('fonts', function() {
 })
 
 gulp.task('watch', ['reload', 'css', 'html', 'img', 'fonts'], function() {
-  gulp.watch('src/**/*.scss', ['css']);
-  gulp.watch('src/**/*.html', ['html']);
+  watch('src/**/*.html', () => gulp.start('html'));
+  watch('src/**/*.scss', () => gulp.start('css'));
   gulp.watch('dist/*.html', browserSync.reload());
 });
