@@ -9,6 +9,9 @@ const nunjucks = require('gulp-nunjucks-render');
 const imagemin = require('gulp-imagemin');
 const watch = require('gulp-watch');
 const plumber = require('gulp-plumber');
+const browserify = require('gulp-browserify');
+const babel = require('babelify');
+const minifyJS = require('gulp-uglify');
 
 gulp.task('css', function() {
   return gulp.src('src/main.scss')
@@ -29,7 +32,7 @@ gulp.task('css', function() {
 });
 
 gulp.task('html', function() {
-  return gulp.src('src/views/*.html')
+  return gulp.src('src/pages/*.html')
     .pipe(plumber())
     .pipe(nunjucks({
       path: 'src/'
@@ -40,7 +43,7 @@ gulp.task('html', function() {
 });
 
 gulp.task('img', function() {
-  return gulp.src('src/img/**/*.*')
+  return gulp.src('src/assets/img/**/*.*')
     .pipe(imagemin([
       imagemin.gifsicle({interlaced: true}),
       imagemin.jpegtran({progressive: true}),
@@ -55,6 +58,21 @@ gulp.task('img', function() {
     .pipe(gulp.dest('dist/img'))
 });
 
+gulp.task('js', function () {
+  return gulp.src('src/index.js')
+    .pipe(plumber())
+    .pipe(browserify({
+      debug: true,
+      transform: [babel.configure({
+        presets: ['es2015'],
+      })]
+    }))
+    .pipe(minifyJS())
+    .pipe(rename('bundle.js'))
+    .pipe(gulp.dest('dist/js'))
+    .pipe(browserSync.stream())
+});
+
 gulp.task('reload', function() {
   browserSync({
     server: {
@@ -65,12 +83,13 @@ gulp.task('reload', function() {
 });
 
 gulp.task('fonts', function() {
-  return gulp.src('src/fonts/*.*')
+  return gulp.src('src/assets/fonts/*.*')
     .pipe(gulp.dest('dist/fonts'))
 })
 
-gulp.task('watch', ['reload', 'css', 'html', 'img', 'fonts'], function() {
+gulp.task('watch', ['reload', 'css', 'html', 'img', 'js', 'fonts'], function() {
   watch('src/**/*.html', () => gulp.start('html'));
   watch('src/**/*.scss', () => gulp.start('css'));
+  watch('src/**/*.js', () => gulp.start('js'));
   gulp.watch('dist/*.html', browserSync.reload());
 });
