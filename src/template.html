@@ -10,7 +10,9 @@
   </title>
 </head>
 <body>
-  {% block content %}{% endblock %}
+  <div class="maincontent" id="{{ pageName }}">
+    {% block content %}{% endblock %}
+  </div>
 
   <script src="js/bundle.js"></script>
 </body>
